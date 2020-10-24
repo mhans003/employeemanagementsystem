@@ -26,6 +26,7 @@ function displayMenu() {
             choices: [
                 "View Employees",
                 "Add Department",
+                "Add Role",
                 "Quit \n"
             ],
             name: "choice"
@@ -40,6 +41,9 @@ function displayMenu() {
                 break; 
             case "Add Department":
                 addDepartment();
+                break; 
+            case "Add Role": 
+                addRole(); 
                 break; 
             case "Quit \n":
                 console.log(`Goodbye!`); 
@@ -121,18 +125,84 @@ function addDepartment() {
         .then(answer => {
             const { userSelection } = answer; 
 
-            if(userSelection === "No. Go Back.") {
-                return displayMenu(); 
-            }
+            if(userSelection === "No. Go Back.") return displayMenu(); 
 
             connection.query("INSERT INTO department SET ?", {
                 name: userInput
             },
-            function(err, res) {
+            function(err) {
                 if(err) throw err; 
 
                 console.log(`Inserted department "${userInput}" into database.`); 
                 return displayMenu(); 
+            }); 
+        }); 
+
+    }); 
+}
+
+function addRole() {
+
+    //Get all departments.
+    connection.query("SELECT department.name FROM department", function(err, res) {
+        if(err) throw err; 
+
+        let departmentNames = []; 
+
+        //For each department, save the name of the department. 
+        res.forEach(department => {
+            departmentNames.push(department.name); 
+        }); 
+
+        //Select the department to add the role to. 
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select department to add role:",
+                choices: [...departmentNames, "Go Back"],
+                name: "userSelection"
+            }
+        ])
+        .then(answer => {
+            const { userSelection } = answer; 
+
+            if(userSelection === "Go Back") return displayMenu(); 
+
+            //Get ID for the selected department. 
+            connection.query("SELECT department.id FROM department WHERE department.name =?", [userSelection], function(err, res) {
+                if(err) throw err; 
+
+                let departmentID = Number(res[0].id); 
+
+                //Get the title and salary for the new role. 
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: "Enter the title for this role:",
+                        name: "titleInput"
+                    },
+                    {
+                        type: "input",
+                        message: "Enter the salary for this role:",
+                        name: "salaryInput"
+                    }
+                ])
+                .then(answers => {
+                    const { titleInput, salaryInput } = answers; 
+
+                    //Insert new role. 
+                    connection.query("INSERT INTO role SET ?", {
+                        title: titleInput,
+                        salary: salaryInput,
+                        department_id: departmentID
+                    },
+                    function(err) {
+                        if(err) throw err; 
+
+                        console.log(`Inserted role "${titleInput}" into database.`); 
+                        return displayMenu(); 
+                    }); 
+                }); 
             }); 
         }); 
 
