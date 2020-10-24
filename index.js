@@ -25,6 +25,7 @@ function displayMenu() {
             message: "What would you like to do?",
             choices: [
                 "View Employees",
+                "Add Department",
                 "Quit \n"
             ],
             name: "choice"
@@ -36,6 +37,9 @@ function displayMenu() {
         switch(choice) {
             case "View Employees": 
                 viewEmployees(); 
+                break; 
+            case "Add Department":
+                addDepartment();
                 break; 
             case "Quit \n":
                 console.log(`Goodbye!`); 
@@ -85,6 +89,53 @@ function viewEmployees() {
 
             
         }); 
+    }); 
+}
+
+function addDepartment() {
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter Department Name (enter 'b' to go back)",
+            name: "userInput"
+        }
+    ])
+    .then(answer => {
+        const { userInput } = answer; 
+
+        if(userInput === "b" || userInput === "") {
+            return displayMenu(); 
+        }
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: `You entered ${userInput}. Confirm:`,
+                choices: [
+                    "Yes",
+                    "No. Go Back."
+                ],
+                name: "userSelection"
+            }
+        ])
+        .then(answer => {
+            const { userSelection } = answer; 
+
+            if(userSelection === "No. Go Back.") {
+                return displayMenu(); 
+            }
+
+            connection.query("INSERT INTO department SET ?", {
+                name: userInput
+            },
+            function(err, res) {
+                if(err) throw err; 
+
+                console.log(`Inserted department "${userInput}" into database.`); 
+                return displayMenu(); 
+            }); 
+        }); 
+
     }); 
 }
 
