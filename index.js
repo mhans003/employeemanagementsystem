@@ -30,6 +30,7 @@ function displayMenu() {
                 "Add Department",
                 "Add Role",
                 "Add Employee",
+                "Update Employee",
                 "Quit \n"
             ],
             name: "choice"
@@ -56,6 +57,9 @@ function displayMenu() {
                 break; 
             case "Add Employee":
                 addEmployee(); 
+                break; 
+            case "Update Employee":
+                updateEmployee(); 
                 break; 
             case "Quit \n":
                 console.log(`Goodbye!`); 
@@ -384,6 +388,80 @@ function addEmployee() {
                 }); 
             }); 
         }); 
+    }); 
+}
+
+function updateEmployee() {
+    let employees = []; 
+
+    //Get all employees 
+    const query = "SELECT employee.id, employee.first_name, employee.last_name FROM employee ORDER BY employee.id";
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach(employee => {
+            employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
+        }); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the employee you want to modify.",
+                choices: [
+                    ...employees
+                ],
+                name: "employeeChoice"
+            }
+        ])
+        .then(answer => {
+            const { employeeChoice } = answer; 
+
+            const employeeID = Number(employeeChoice.slice(0, employeeChoice.indexOf("."))); 
+
+            //console.log(employeeID); 
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "What field do you want to update?",
+                    choices: [
+                        "first_name",
+                        "last_name",
+                        "role_id",
+                        "manager_id"
+                    ],
+                    name: "fieldToUpdate"
+                }
+            ])
+            .then(answer => {
+                const { fieldToUpdate } = answer; 
+        
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: `Enter the new value for ${fieldToUpdate}`,
+                        name: "newValue"
+                    }
+                ])
+                .then(answer => {
+                    const { newValue } = answer; 
+        
+                    updateFields("employee", fieldToUpdate, newValue, employeeID); 
+                }); 
+            }); 
+
+        }); 
+    }); 
+
+}
+
+function updateFields(table, field, newValue, id) {
+    const query = `UPDATE ${table} SET ${field}='${newValue}' WHERE id=${id}`; 
+ 
+    connection.query(query, function(err) {
+        if(err) throw err; 
+        console.log(`Updated fields`); 
+        return displayMenu(); 
     }); 
 }
 
