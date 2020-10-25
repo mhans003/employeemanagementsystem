@@ -24,6 +24,7 @@ function displayMenu() {
             type: "list",
             message: "What would you like to do?",
             choices: [
+                "View Departments",
                 "View Roles",
                 "View Employees",
                 "Add Department",
@@ -38,6 +39,9 @@ function displayMenu() {
         const { choice } = answer; 
 
         switch(choice) {
+            case "View Departments":
+                viewDepartments(); 
+                break; 
             case "View Roles":
                 viewRoles(); 
                 break; 
@@ -57,6 +61,27 @@ function displayMenu() {
                 console.log(`Goodbye!`); 
                 connection.end(); 
         }
+    }); 
+}
+
+function viewDepartments() {
+    let departments = []; 
+    const query = "SELECT department.* from department ORDER BY department.id"; 
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach((department, key, departmentArray) => {
+            departments.push({
+                "ID": department.id,
+                "Name": department.name
+            }); 
+
+            if(Object.is(departmentArray.length - 1, key)) {
+                console.table(departments); 
+                displayMenu(); 
+            }
+        }); 
     }); 
 }
 
