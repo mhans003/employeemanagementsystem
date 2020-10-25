@@ -24,6 +24,7 @@ function displayMenu() {
             type: "list",
             message: "What would you like to do?",
             choices: [
+                "View Roles",
                 "View Employees",
                 "Add Department",
                 "Add Role",
@@ -37,6 +38,9 @@ function displayMenu() {
         const { choice } = answer; 
 
         switch(choice) {
+            case "View Roles":
+                viewRoles(); 
+                break; 
             case "View Employees": 
                 viewEmployees(); 
                 break; 
@@ -53,6 +57,29 @@ function displayMenu() {
                 console.log(`Goodbye!`); 
                 connection.end(); 
         }
+    }); 
+}
+
+function viewRoles() {
+    let roles = []; 
+    const query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach((role, key, roleArray) => {
+            roles.push({
+                "ID": role.id,
+                "Title": role.title,
+                "Salary": role.salary,
+                "Department": role.name
+            }); 
+
+            if(Object.is(roleArray.length - 1, key)) {
+                console.table(roles); 
+                displayMenu(); 
+            }
+        }); 
     }); 
 }
 
@@ -335,55 +362,3 @@ function addEmployee() {
     }); 
 }
 
-/*
-function viewEmployees() {
-    let employees = []; 
-    const query = "SELECT * from employee"; 
-    connection.query(query, function(err, res) {
-        if(err) throw err;  
-
-        //console.log(res); 
-        res.forEach((employee,key,employeeArray) => {
-
-            //get Role Title 
-            const query = "SELECT title FROM role WHERE id=?"; 
-            var thisRoleTitle; 
-            connection.query(query, [employee.id], function(err, res) {
-                if(err) throw err;
-            
-                thisRoleTitle = res[0].title; 
-
-                employees.push({
-                    ID: employee.id,
-                    First_Name: employee.first_name,
-                    Last_Name: employee.last_name,
-                    Title: thisRoleTitle
-                }); 
-
-                //console.log("Employees so far: ",employees); 
-
-                if(Object.is(employeeArray.length - 1, key)) {
-                    console.table(employees); 
-                    displayMenu(); 
-                }
-                
-            }); 
-            
-        }); 
-    }); 
-}
-*/
-
-
-
-
-/*
-                console.table([ 
-                    {
-                        ID: employee.id,
-                        First_Name: employee.first_name,
-                        Last_Name: employee.last_name,
-                        Title: thisRoleTitle
-                    }
-                ]); 
-                */
