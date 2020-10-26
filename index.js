@@ -30,6 +30,7 @@ function displayMenu() {
                 "Add Department",
                 "Add Role",
                 "Add Employee",
+                "Update Department",
                 "Update Role",
                 "Update Employee",
                 "Quit \n"
@@ -58,6 +59,9 @@ function displayMenu() {
                 break; 
             case "Add Employee":
                 addEmployee(); 
+                break; 
+            case "Update Department":
+                updateDepartment(); 
                 break; 
             case "Update Role":
                 updateRole(); 
@@ -484,6 +488,66 @@ function updateEmployee() {
 
 }
 */
+
+function updateDepartment() {
+    let departments = []; 
+
+    //Get all roles.
+    const query = "SELECT department.* FROM department ORDER BY department.id";
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach(department => {
+            departments.push(`${department.id}. ${department.name}`); 
+        }); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the department you want to modify.",
+                choices: [
+                    ...departments
+                ],
+                name: "departmentChoice"
+            }
+        ])
+        .then(answer => {
+            const { departmentChoice } = answer; 
+
+            const departmentID = Number(departmentChoice.slice(0, departmentChoice.indexOf("."))); 
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "What field do you want to update?",
+                    choices: [
+                        "name"
+                    ],
+                    name: "fieldToUpdate"
+                }
+            ])
+            .then(answer => {
+                const { fieldToUpdate } = answer; 
+
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: `Enter the new value for ${fieldToUpdate}. (To go back and view departments, enter D.)`,
+                        name: "newValue"
+                    }
+                ])
+                .then(answer => {
+                    const { newValue } = answer; 
+
+                    if(newValue === "d" || newValue === "D") return viewDepartments(); 
+        
+                    updateFields("department", fieldToUpdate, newValue, departmentID); 
+                }); 
+            }); 
+        }); 
+    }); 
+}
 
 function updateRole() {
     let roles = []; 
