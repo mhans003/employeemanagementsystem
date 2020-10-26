@@ -77,26 +77,48 @@ function displayMenu() {
 }
 
 function viewDepartments() {
-    let departments = []; 
-    const query = "SELECT department.* from department ORDER BY department.id"; 
+    let departments = [];  
 
-    connection.query(query, function(err, res) {
-        if(err) throw err; 
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Order By:",
+            choices: [
+                "ID",
+                "Name"
+            ],
+            name: "orderChoice"
+        }
+    ])
+    .then(answer => {
+        const { orderChoice } = answer; 
 
-        res.forEach((department, key, departmentArray) => {
-            departments.push({
-                "ID": department.id,
-                "Name": department.name
+        let query = ""; 
+
+        if(orderChoice === "ID") {
+            query = "SELECT department.* from department ORDER BY department.id";
+        } else if(orderChoice === "Name") {
+            query = "SELECT department.* from department ORDER BY department.name";
+        }
+
+        connection.query(query, function(err, res) {
+            if(err) throw err; 
+    
+            res.forEach((department, key, departmentArray) => {
+                departments.push({
+                    "ID": department.id,
+                    "Name": department.name
+                }); 
+    
+                if(Object.is(departmentArray.length - 1, key)) {
+                    console.log(""); 
+                    console.log("------------------------------------- DEPARTMENT LIST -------------------------------------");
+                    console.log(""); 
+                    console.table(departments); 
+                    console.log("-------------------------------------------------------------------------------------------");
+                    return displayMenu(); 
+                }
             }); 
-
-            if(Object.is(departmentArray.length - 1, key)) {
-                console.log(""); 
-                console.log("------------------------------------- DEPARTMENT LIST -------------------------------------");
-                console.log(""); 
-                console.table(departments); 
-                console.log("-------------------------------------------------------------------------------------------");
-                return displayMenu(); 
-            }
         }); 
     }); 
 }
