@@ -30,6 +30,7 @@ function displayMenu() {
                 "Add Department",
                 "Add Role",
                 "Add Employee",
+                "Update Role",
                 "Update Employee",
                 "Quit \n"
             ],
@@ -57,6 +58,9 @@ function displayMenu() {
                 break; 
             case "Add Employee":
                 addEmployee(); 
+                break; 
+            case "Update Role":
+                updateRole(); 
                 break; 
             case "Update Employee":
                 updateEmployee(); 
@@ -480,6 +484,69 @@ function updateEmployee() {
 
 }
 */
+
+function updateRole() {
+    let roles = []; 
+
+    //Get all roles.
+    const query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach(role => {
+            roles.push(`${role.id}. ${role.title} (${role.name} - $${role.salary})`); 
+        }); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the role you want to modify.",
+                choices: [
+                    ...roles
+                ],
+                name: "roleChoice"
+            }
+        ])
+        .then(answer => {
+            const { roleChoice } = answer; 
+
+            const roleID = Number(roleChoice.slice(0, roleChoice.indexOf("."))); 
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "What field do you want to update?",
+                    choices: [
+                        "title",
+                        "salary",
+                        "department_id"
+                    ],
+                    name: "fieldToUpdate"
+                }
+            ])
+            .then(answer => {
+                const { fieldToUpdate } = answer; 
+
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: `Enter the new value for ${fieldToUpdate}. (To go back and view roles, enter R. To go back and view departments, enter D.)`,
+                        name: "newValue"
+                    }
+                ])
+                .then(answer => {
+                    const { newValue } = answer; 
+
+                    if(newValue === "r" || newValue === "R") return viewRoles(); 
+                    if(newValue === "d" || newValue === "D") return viewDepartments(); 
+        
+                    updateFields("role", fieldToUpdate, newValue, roleID); 
+                }); 
+            }); 
+        }); 
+    }); 
+}
 
 function updateEmployee() {
     let employees = []; 
