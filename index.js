@@ -103,27 +103,55 @@ function viewDepartments() {
 
 function viewRoles() {
     let roles = []; 
-    const query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
 
-    connection.query(query, function(err, res) {
-        if(err) throw err; 
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Order By:",
+            choices: [
+                "ID",
+                "Role Title",
+                "Salary",
+                "Department"
+            ],
+            name: "orderChoice"
+        }
+    ])
+    .then(answer => {
+        const { orderChoice } = answer; 
 
-        res.forEach((role, key, roleArray) => {
-            roles.push({
-                "ID": role.id,
-                "Title": role.title,
-                "Salary": role.salary,
-                "Department": role.name
+        let query = ""; 
+
+        if(orderChoice === "ID") {
+            query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
+        } else if(orderChoice === "Role Title") {
+            query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.title";
+        } else if(orderChoice === "Salary") {
+            query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.salary DESC";
+        } else if(orderChoice === "Department") {
+            query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY department.name";
+        }
+
+        connection.query(query, function(err, res) {
+            if(err) throw err; 
+    
+            res.forEach((role, key, roleArray) => {
+                roles.push({
+                    "ID": role.id,
+                    "Title": role.title,
+                    "Salary": role.salary,
+                    "Department": role.name
+                }); 
+    
+                if(Object.is(roleArray.length - 1, key)) {
+                    console.log(""); 
+                    console.log("------------------------------------- ROLE LIST -------------------------------------");
+                    console.log(""); 
+                    console.table(roles); 
+                    console.log("-------------------------------------------------------------------------------------");
+                    return displayMenu(); 
+                }
             }); 
-
-            if(Object.is(roleArray.length - 1, key)) {
-                console.log(""); 
-                console.log("------------------------------------- ROLE LIST -------------------------------------");
-                console.log(""); 
-                console.table(roles); 
-                console.log("-------------------------------------------------------------------------------------");
-                return displayMenu(); 
-            }
         }); 
     }); 
 }
