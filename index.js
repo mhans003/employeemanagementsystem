@@ -64,7 +64,7 @@ function displayMenu() {
             case "Quit \n":
                 console.log(`Goodbye!`); 
                 connection.end(); 
-        }
+        } 
     }); 
 }
 
@@ -82,8 +82,12 @@ function viewDepartments() {
             }); 
 
             if(Object.is(departmentArray.length - 1, key)) {
+                console.log(""); 
+                console.log("------------------------------------- DEPARTMENT LIST -------------------------------------");
+                console.log(""); 
                 console.table(departments); 
-                displayMenu(); 
+                console.log("-------------------------------------------------------------------------------------------");
+                return displayMenu(); 
             }
         }); 
     }); 
@@ -105,8 +109,12 @@ function viewRoles() {
             }); 
 
             if(Object.is(roleArray.length - 1, key)) {
+                console.log(""); 
+                console.log("------------------------------------- ROLE LIST -------------------------------------");
+                console.log(""); 
                 console.table(roles); 
-                displayMenu(); 
+                console.log("-------------------------------------------------------------------------------------");
+                return displayMenu(); 
             }
         }); 
     }); 
@@ -145,8 +153,12 @@ function viewEmployees() {
                 }); 
     
                 if(Object.is(employeeArray.length - 1, key)) {
+                    console.log(""); 
+                    console.log("------------------------------------- EMPLOYEE LIST -------------------------------------");
+                    console.log(""); 
                     console.table(employees); 
-                    displayMenu(); 
+                    console.log("-----------------------------------------------------------------------------------------");
+                    return displayMenu(); 
                 }
             }); 
 
@@ -193,7 +205,11 @@ function addDepartment() {
             function(err) {
                 if(err) throw err; 
 
-                console.log(`Inserted department "${userInput}" into database.`); 
+                console.log("---------------------------------------------------------------------");
+                console.log(`DEPARTMENT INSERTED SUCCESSFULLY.`);
+                console.log(`INSERTED DEPARTMENT "${userInput}" INTO DATABASE.`); 
+                console.log("---------------------------------------------------------------------");
+
                 return displayMenu(); 
             }); 
         }); 
@@ -259,7 +275,11 @@ function addRole() {
                     function(err) {
                         if(err) throw err; 
 
-                        console.log(`Inserted role "${titleInput}" into database.`); 
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`ROLE INSERTED SUCCESSFULLY.`);
+                        console.log(`INSERTED ROLE "${titleInput}" INTO DATABASE.`); 
+                        console.log("---------------------------------------------------------------------"); 
+
                         return displayMenu(); 
                     }); 
                 }); 
@@ -381,7 +401,11 @@ function addEmployee() {
                         function(err) {
                             if(err) throw err; 
 
-                            console.log(`Employee has been inserted into database.`); 
+                            console.log("---------------------------------------------------------------------");
+                            console.log(`EMPLOYEE INSERTED SUCCESSFULLY.`);
+                            console.log(`INSERTED EMPLOYEE "${firstNameInput} ${lastNameInput}" INTO DATABASE.`); 
+                            console.log("---------------------------------------------------------------------"); 
+
                             return displayMenu(); 
                         }); 
                     }); 
@@ -391,6 +415,7 @@ function addEmployee() {
     }); 
 }
 
+/*
 function updateEmployee() {
     let employees = []; 
 
@@ -454,14 +479,87 @@ function updateEmployee() {
     }); 
 
 }
+*/
+
+function updateEmployee() {
+    let employees = []; 
+
+    //Get all employees 
+    const query = "SELECT employee.id, employee.first_name, employee.last_name FROM employee ORDER BY employee.id";
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        res.forEach(employee => {
+            employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
+        }); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the employee you want to modify.",
+                choices: [
+                    ...employees
+                ],
+                name: "employeeChoice"
+            }
+        ])
+        .then(answer => {
+            const { employeeChoice } = answer; 
+
+            const employeeID = Number(employeeChoice.slice(0, employeeChoice.indexOf("."))); 
+
+            //console.log(employeeID); 
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "What field do you want to update?",
+                    choices: [
+                        "first_name",
+                        "last_name",
+                        "role_id",
+                        "manager_id"
+                    ],
+                    name: "fieldToUpdate"
+                }
+            ])
+            .then(answer => {
+                const { fieldToUpdate } = answer; 
+        
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: `Enter the new value for ${fieldToUpdate}. (To go back and view roles, enter R. To go back and view employees, enter E.)`,
+                        name: "newValue"
+                    }
+                ])
+                .then(answer => {
+                    const { newValue } = answer; 
+
+                    if(newValue === "r" || newValue === "R") return viewRoles(); 
+                    if(newValue === "e" || newValue === "E") return viewEmployees(); 
+        
+                    updateFields("employee", fieldToUpdate, newValue, employeeID); 
+                }); 
+            }); 
+
+        }); 
+    }); 
+
+}
 
 function updateFields(table, field, newValue, id) {
     const query = `UPDATE ${table} SET ${field}='${newValue}' WHERE id=${id}`; 
  
     connection.query(query, function(err) {
         if(err) throw err; 
-        console.log(`Updated fields`); 
+        console.log("---------------------------------------------------------------------");
+        console.log(`FIELD UPDATED SUCCESSFULLY.`);
+        console.log(`UPDATED ID #${id} IN FIELD ${field} OF TABLE ${table} TO ${newValue}.`); 
+        console.log("---------------------------------------------------------------------");
         return displayMenu(); 
     }); 
 }
+
+
 
