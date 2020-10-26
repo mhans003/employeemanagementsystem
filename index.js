@@ -130,48 +130,85 @@ function viewRoles() {
 
 function viewEmployees() {
     let employees = []; 
-    //const query = "SELECT employee.*, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ORDER BY employee.id"; 
-    const query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.id"; 
-    connection.query(query, function(err, res) {
-        if(err) throw err; 
 
-        res.forEach((employee,key,employeeArray) => {
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Order By:",
+            choices: [
+                "ID",
+                "Manager",
+                "Department",
+                "Salary",
+                "Role Title",
+                "First Name",
+                "Last Name"
+            ],
+            name: "orderChoice"
+        }
+    ])
+    .then(answer => {
+        const { orderChoice } = answer; 
 
-            //Get this employee's manager, if any. 
-            const managerQuery = "SELECT employee.first_name, employee.last_name FROM employee WHERE id = ?"; 
-            connection.query(managerQuery, [employee.manager_id],function(err, res) {
-                if(err) throw err; 
+        let query = ""; 
 
-                let thisManager; 
+        if(orderChoice === "ID") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.id"; 
+        } else if(orderChoice === "Manager") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.manager_id"; 
+        } else if(orderChoice === "Department") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY department.name"; 
+        } else if(orderChoice === "Salary") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY role.salary DESC"; 
+        } else if(orderChoice === "Role Title") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY role.title"; 
+        } else if(orderChoice === "First Name") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.first_name"; 
+        } else if(orderChoice === "Last Name") {
+            query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.last_name"; 
+        }
 
-                if(res.length > 0) {
-                    thisManager = `${res[0].first_name} ${res[0].last_name}`; 
-                } else {
-                    thisManager = `None`; 
-                }
-
-                employees.push({
-                    "ID": employee.id,
-                    "First Name": employee.first_name,
-                    "Last Name": employee.last_name,
-                    "Title": employee.title,
-                    "Department": employee.name,
-                    "Salary": employee.salary,
-                    "Manager": thisManager
+        connection.query(query, function(err, res) {
+            if(err) throw err; 
+    
+            res.forEach((employee,key,employeeArray) => {
+    
+                //Get this employee's manager, if any. 
+                const managerQuery = "SELECT employee.first_name, employee.last_name FROM employee WHERE id = ?"; 
+                connection.query(managerQuery, [employee.manager_id],function(err, res) {
+                    if(err) throw err; 
+    
+                    let thisManager; 
+    
+                    if(res.length > 0) {
+                        thisManager = `${res[0].first_name} ${res[0].last_name}`; 
+                    } else {
+                        thisManager = `None`; 
+                    }
+    
+                    employees.push({
+                        "ID": employee.id,
+                        "First Name": employee.first_name,
+                        "Last Name": employee.last_name,
+                        "Title": employee.title,
+                        "Department": employee.name,
+                        "Salary": employee.salary,
+                        "Manager": thisManager
+                    }); 
+        
+                    if(Object.is(employeeArray.length - 1, key)) {
+                        console.log(""); 
+                        console.log("------------------------------------- EMPLOYEE LIST -------------------------------------");
+                        console.log(""); 
+                        console.table(employees); 
+                        console.log("-----------------------------------------------------------------------------------------");
+                        return displayMenu(); 
+                    }
                 }); 
     
-                if(Object.is(employeeArray.length - 1, key)) {
-                    console.log(""); 
-                    console.log("------------------------------------- EMPLOYEE LIST -------------------------------------");
-                    console.log(""); 
-                    console.table(employees); 
-                    console.log("-----------------------------------------------------------------------------------------");
-                    return displayMenu(); 
-                }
+    
+                
             }); 
-
-
-            
         }); 
     }); 
 }
