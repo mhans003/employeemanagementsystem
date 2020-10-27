@@ -33,6 +33,7 @@ function displayMenu() {
                 "Update Department",
                 "Update Role",
                 "Update Employee",
+                "View Total Utilized Budget",
                 "Quit \n"
             ],
             name: "choice"
@@ -68,6 +69,9 @@ function displayMenu() {
                 break; 
             case "Update Employee":
                 updateEmployee(); 
+                break; 
+            case "View Total Utilized Budget":
+                viewTotalBudget(); 
                 break; 
             case "Quit \n":
                 console.log(`Goodbye!`); 
@@ -776,6 +780,76 @@ function updateFields(table, field, newValue, id) {
         console.log(`UPDATED ID #${id} IN FIELD ${field} OF TABLE ${table} TO ${newValue}.`); 
         console.log("---------------------------------------------------------------------");
         return displayMenu(); 
+    }); 
+}
+
+function viewTotalBudget() {
+    console.log("ADD TOTAL SALARY OF ALL EMPLOYEES IN A DEPT."); 
+
+    query = "SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, department.id FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY department.id"; 
+
+    connection.query(query, function(err, res) {
+        if(err) throw err; 
+
+        let departmentBudgets = [];
+        let currentTotal = 0;  
+        let totalEmployees = 0; 
+
+        for(let resIndex = 0; resIndex < res.length; resIndex++) {
+            if(resIndex === 0) {
+                currentTotal = res[resIndex].salary;
+                totalEmployees++;  
+            } else if(resIndex === res.length - 1) {
+                if(res[resIndex - 1].id !== res[resIndex].id) {
+                    departmentBudgets.push({
+                        "Department":res[resIndex - 1].name,
+                        "Total Employees":totalEmployees,
+                        "Total Utilized Budget":currentTotal
+                    }); 
+                    departmentBudgets.push({
+                        "Department":res[resIndex].name,
+                        "Total Employees":1,
+                        "Total Utilized Budget:":res[resIndex].salary
+                    }); 
+                } else {
+                    currentTotal += res[resIndex].salary;
+                    totalEmployees++;  
+                    departmentBudgets.push({
+                        "Department":res[resIndex].name,
+                        "Total Employees":totalEmployees,
+                        "Total Utilized Budget":currentTotal
+                    }); 
+                }
+            } else if(res[resIndex].id === res[resIndex - 1].id) {
+                currentTotal += res[resIndex].salary; 
+                totalEmployees++; 
+            } else {
+                departmentBudgets.push({
+                    "Department":res[resIndex - 1].name,
+                    "Total Employees":totalEmployees,
+                    "Total Utilized Budget":currentTotal
+                }); 
+                currentTotal = res[resIndex].salary; 
+                totalEmployees = 1; 
+            }
+        }
+
+        console.log(""); 
+        console.log("----------------------- TOTAL UTILIZED BUDGET (BY DEPARTMENT) ------------------------");
+        console.log(""); 
+        console.table(departmentBudgets); 
+        console.log("--------------------------------------------------------------------------------------");
+
+        let companyTotal = 0; 
+
+        departmentBudgets.forEach(department => {
+            companyTotal += department["Total Utilized Budget"];
+        }); 
+
+        console.log(`TOTAL COMPANY UTILIZED BUDGET: ${companyTotal}`); 
+        console.log("--------------------------------------------------------------------------------------");
+
+        return displayMenu();
     }); 
 }
 
