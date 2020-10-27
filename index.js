@@ -2,8 +2,9 @@ const inquirer = require("inquirer");
 const mysql = require("mysql"); 
 const cTable = require('console.table');
 
-let table; 
+//let table; 
 
+//Configure and connect to mysql. 
 const connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -22,7 +23,6 @@ connection.connect(function(err) {
 function displayLogo() {
 
     let logo = `
-
         #######                                                    ######                                                  
         #       #    # #####  #       ####  #   # ###### ######    #     #   ##   #####   ##   #####    ##    ####  ###### 
         #       ##  ## #    # #      #    #  # #  #      #         #     #  #  #    #    #  #  #    #  #  #  #      #      
@@ -33,7 +33,6 @@ function displayLogo() {
     `;
 
     console.log(logo); 
-
 }
 
 function displayMenu() {
@@ -114,6 +113,7 @@ function displayMenu() {
 function viewDepartments() {
     let departments = [];  
 
+    //Get the listing preference from the user. 
     inquirer.prompt([
         {
             type: "list",
@@ -130,6 +130,7 @@ function viewDepartments() {
 
         let query = ""; 
 
+        //Adjust query depending on sorting option. 
         if(orderChoice === "ID") {
             query = "SELECT department.* from department ORDER BY department.id";
         } else if(orderChoice === "Name") {
@@ -139,12 +140,14 @@ function viewDepartments() {
         connection.query(query, function(err, res) {
             if(err) displayError(); 
     
+            //For each department, store the ID and name. 
             res.forEach((department, key, departmentArray) => {
                 departments.push({
                     "ID": department.id,
                     "Name": department.name
                 }); 
     
+                //At the end of the iteration, output the department list. 
                 if(Object.is(departmentArray.length - 1, key)) {
                     console.log(""); 
                     console.log("------------------------------------- DEPARTMENT LIST -------------------------------------");
@@ -161,6 +164,7 @@ function viewDepartments() {
 function viewRoles() {
     let roles = []; 
 
+    //Get the listing preference from the user. 
     inquirer.prompt([
         {
             type: "list",
@@ -179,6 +183,7 @@ function viewRoles() {
 
         let query = ""; 
 
+        //Depending on sorting preference, retrieve job roles. 
         if(orderChoice === "ID") {
             query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
         } else if(orderChoice === "Role Title") {
@@ -192,6 +197,7 @@ function viewRoles() {
         connection.query(query, function(err, res) {
             if(err) displayError(); 
     
+            //For each role retrieved, create the table and headings. 
             res.forEach((role, key, roleArray) => {
                 roles.push({
                     "ID": role.id,
@@ -200,6 +206,7 @@ function viewRoles() {
                     "Department": role.name
                 }); 
     
+                //At the end of the iteration, output the table. 
                 if(Object.is(roleArray.length - 1, key)) {
                     console.log(""); 
                     console.log("------------------------------------- ROLE LIST -------------------------------------");
@@ -216,6 +223,7 @@ function viewRoles() {
 function viewEmployees() {
     let employees = []; 
 
+    //Get the sorting preference from the user. 
     inquirer.prompt([
         {
             type: "list",
@@ -237,6 +245,7 @@ function viewEmployees() {
 
         let query = ""; 
 
+        //Choose correct query depending on sorting preference. 
         if(orderChoice === "ID") {
             query = "SELECT employee.*, role.title, role.salary, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY employee.id"; 
         } else if(orderChoice === "Manager") {
@@ -271,6 +280,7 @@ function viewEmployees() {
                         thisManager = `None`; 
                     }
     
+                    //Prepare the table. 
                     employees.push({
                         "ID": employee.id,
                         "First Name": employee.first_name,
@@ -281,6 +291,7 @@ function viewEmployees() {
                         "Manager": thisManager
                     }); 
         
+                    //At the end of the iteration, output the table. 
                     if(Object.is(employeeArray.length - 1, key)) {
                         console.log(""); 
                         console.log("------------------------------------- EMPLOYEE LIST -------------------------------------");
@@ -290,9 +301,6 @@ function viewEmployees() {
                         return displayMenu(); 
                     }
                 }); 
-    
-    
-                
             }); 
         }); 
     }); 
@@ -309,10 +317,12 @@ function addDepartment() {
     .then(answer => {
         const { userInput } = answer; 
 
+        //Allow user to go back. 
         if(userInput === "b" || userInput === "") {
             return displayMenu(); 
         }
 
+        //Confirm input. 
         inquirer.prompt([
             {
                 type: "list",
@@ -329,12 +339,14 @@ function addDepartment() {
 
             if(userSelection === "No. Go Back.") return displayMenu(); 
 
+            //Using the user's input for the name, set this new department name. 
             connection.query("INSERT INTO department SET ?", {
                 name: userInput
             },
             function(err) {
                 if(err) displayError(); 
 
+                //Output the results of the operation. 
                 console.log("---------------------------------------------------------------------");
                 console.log(`DEPARTMENT INSERTED SUCCESSFULLY.`);
                 console.log(`INSERTED DEPARTMENT "${userInput}" INTO DATABASE.`); 
@@ -405,6 +417,7 @@ function addRole() {
                     function(err) {
                         if(err) displayError(); 
 
+                        //Output the results of the operation. 
                         console.log("---------------------------------------------------------------------");
                         console.log(`ROLE INSERTED SUCCESSFULLY.`);
                         console.log(`INSERTED ROLE "${titleInput}" INTO DATABASE.`); 
@@ -415,7 +428,6 @@ function addRole() {
                 }); 
             }); 
         }); 
-
     }); 
 }
 
@@ -439,6 +451,7 @@ function addEmployee() {
         connection.query("SELECT role.id, role.title FROM role", function(err, res) {
             if(err) displayError(); 
 
+            //Create an array for the roles(with id) and just role titles. 
             let allRoles = []; 
             let allRoleTitles = []; 
 
@@ -468,6 +481,7 @@ function addEmployee() {
                 connection.query("SELECT * FROM employee", function(err, res) {
                     if(err) displayError(); 
 
+                    //Create arrays to hold employee data and just employee names. 
                     let allEmployees = []; 
                     let allEmployeeNames = []; 
 
@@ -480,6 +494,7 @@ function addEmployee() {
                         allEmployeeNames.push(`${employee.first_name} ${employee.last_name}`); 
                     }); 
 
+                    //Using the employee names, see if any are the manager. 
                     inquirer.prompt([
                         {
                             type: "list",
@@ -497,6 +512,7 @@ function addEmployee() {
                         let employeeRole; 
                         let employeeManager; 
 
+                        //Get the role and manager for this employee. 
                         for(let i = 0; i < allRoles.length; i++) {
                             if(allRoles[i].roleTitle === employeeRoleChoice) {
                                 employeeRole = allRoles[i].roleID; 
@@ -515,6 +531,7 @@ function addEmployee() {
                             employeeManager = null; 
                         }
 
+                        //Using the collected data, create the employee. 
                         connection.query("INSERT INTO employee SET ?", {
                             first_name: firstNameInput,
                             last_name: lastNameInput,
@@ -529,6 +546,7 @@ function addEmployee() {
                                 return displayMenu(); 
                             }  
 
+                            //At the end, output the results. 
                             console.log("---------------------------------------------------------------------");
                             console.log(`EMPLOYEE INSERTED SUCCESSFULLY.`);
                             console.log(`INSERTED EMPLOYEE "${firstNameInput} ${lastNameInput}" INTO DATABASE.`); 
@@ -552,6 +570,7 @@ function updateDepartment() {
     connection.query(query, function(err, res) {
         if(err) displayError(); 
 
+        //Generate the list for user to choose from. 
         res.forEach(department => {
             departments.push(`${department.id}. ${department.name}`); 
         }); 
@@ -569,6 +588,7 @@ function updateDepartment() {
         .then(answer => {
             const { departmentChoice } = answer; 
 
+            //Extract the ID. 
             const departmentID = Number(departmentChoice.slice(0, departmentChoice.indexOf("."))); 
 
             inquirer.prompt([
@@ -596,6 +616,7 @@ function updateDepartment() {
 
                     if(newValue === "d" || newValue === "D") return viewDepartments(); 
         
+                    //Using the new input value, pass into the function to update the fields. 
                     updateFields("department", fieldToUpdate, newValue, departmentID); 
                 }); 
             }); 
@@ -612,6 +633,7 @@ function updateRole() {
     connection.query(query, function(err, res) {
         if(err) displayError(); 
 
+        //Output all the roles for the user to choose from. 
         res.forEach(role => {
             roles.push(`${role.id}. ${role.title} (${role.name} - $${role.salary})`); 
         }); 
@@ -629,6 +651,7 @@ function updateRole() {
         .then(answer => {
             const { roleChoice } = answer; 
 
+            //Extract the ID. 
             const roleID = Number(roleChoice.slice(0, roleChoice.indexOf("."))); 
 
             inquirer.prompt([
@@ -659,6 +682,7 @@ function updateRole() {
                     if(newValue === "r" || newValue === "R") return viewRoles(); 
                     if(newValue === "d" || newValue === "D") return viewDepartments(); 
         
+                    //Using the input information, pass along the information to update. 
                     updateFields("role", fieldToUpdate, newValue, roleID); 
                 }); 
             }); 
@@ -675,6 +699,7 @@ function updateEmployee() {
     connection.query(query, function(err, res) {
         if(err) displayError();
 
+        //Create list of employees for user to choose. 
         res.forEach(employee => {
             employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
         }); 
@@ -692,6 +717,7 @@ function updateEmployee() {
         .then(answer => {
             const { employeeChoice } = answer; 
 
+            //Extract the ID. 
             const employeeID = Number(employeeChoice.slice(0, employeeChoice.indexOf("."))); 
 
             inquirer.prompt([
@@ -723,10 +749,10 @@ function updateEmployee() {
                     if(newValue === "r" || newValue === "R") return viewRoles(); 
                     if(newValue === "e" || newValue === "E") return viewEmployees(); 
         
+                    //Using the retrieved data, update this employee. 
                     updateFields("employee", fieldToUpdate, newValue, employeeID); 
                 }); 
             }); 
-
         }); 
     }); 
 }
@@ -737,6 +763,7 @@ function deleteDepartment() {
     connection.query("SELECT * FROM department ORDER BY department.id", function(err, res) {
         if(err) displayError();
 
+        //Get each department. 
         res.forEach(department => departmentNames.push(department.name)); 
 
         inquirer.prompt([
@@ -752,6 +779,7 @@ function deleteDepartment() {
         .then(answer => {
             const { departmentChoice } = answer; 
 
+            //Verify that the user wants to delete this department. 
             inquirer.prompt([
                 {
                     type:"list",
@@ -836,6 +864,7 @@ function deleteDepartment() {
                             return displayMenu(); 
                         }  
                         
+                        //Output the results from this operation. 
                         console.log("---------------------------------------------------------------------");
                         console.log(`DEPARTMENT DELETED SUCCESSFULLY.`);
                         console.log(`DELETED DEPARTMENT "${departmentChoice}" FROM DATABASE.`); 
@@ -843,9 +872,7 @@ function deleteDepartment() {
 
                         return displayMenu(); 
                     }); 
-                }); 
-               
-                
+                });  
             }); 
         });
     }); 
@@ -857,6 +884,7 @@ function deleteRole() {
     connection.query("SELECT * FROM role ORDER BY role.id", function(err, res) {
         if(err) displayError(); 
 
+        //Get every role for the user to choose. 
         res.forEach(role => roleTitles.push(role.title)); 
 
         inquirer.prompt([
@@ -888,7 +916,6 @@ function deleteRole() {
 
                 if(userChoice === "NO") return displayMenu(); 
 
-                //const roleQuery = `SELECT role.id, role.title, department.name FROM role LEFT JOIN department ON role.department_id = department.id WHERE role.title = "${roleChoice}" ORDER BY role.title`; 
                 const roleQuery = `SELECT role.title, employee.id FROM role LEFT JOIN employee ON employee.role_id = role.id WHERE role.title = "${roleChoice}" ORDER BY role.title`; 
 
                 connection.query(roleQuery, function(err, res) {
@@ -927,6 +954,7 @@ function deleteRole() {
                             return displayMenu(); 
                         }  
                         
+                        //Output the results of this operation. 
                         console.log("---------------------------------------------------------------------");
                         console.log(`ROLE DELETED SUCCESSFULLY.`);
                         console.log(`DELETED ROLE "${roleChoice}" FROM DATABASE.`); 
@@ -935,7 +963,6 @@ function deleteRole() {
                         return displayMenu(); 
                     }); 
                 }); 
-                
             }); 
         });
     }); 
@@ -947,6 +974,7 @@ function deleteEmployee() {
     connection.query("SELECT * FROM employee ORDER BY employee.id", function(err, res) {
         if(err) displayError(); 
 
+        //Create list of employees for user to choose from. 
         res.forEach(employee => employeeNames.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`)); 
 
         inquirer.prompt([
@@ -997,7 +1025,6 @@ function deleteEmployee() {
 
                     return displayMenu(); 
                 }); 
-                
             }); 
         });
     }); 
@@ -1006,12 +1033,14 @@ function deleteEmployee() {
 function updateFields(table, field, newValue, id) {
     let query = ""; 
 
+    //Depending on input type, create query string. 
     if(newValue === "null" || newValue === "NULL") {
         query = `UPDATE ${table} SET ${field}=${newValue} WHERE id=${id}`; 
     } else {
         query = `UPDATE ${table} SET ${field}='${newValue}' WHERE id=${id}`; 
     }
  
+    //Update fields and return back to main menu. 
     connection.query(query, function(err) {
         if(err) displayError();
         
@@ -1028,6 +1057,7 @@ function viewTotalBudget() {
 
     query = "SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, department.id FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY department.id"; 
 
+    //Access every employee in each department. 
     connection.query(query, function(err, res) {
         if(err) displayError(); 
 
@@ -1035,6 +1065,9 @@ function viewTotalBudget() {
         let currentTotal = 0;  
         let totalEmployees = 0; 
 
+        //Go through each of the results (each employee) and keep track of the total employees and the current total for each department. 
+        //Each time a new department is found, package and store data for that department and move on to the next. 
+        //Special cases for if there is only one entry or if the program has reached the end of the results. 
         for(let resIndex = 0; resIndex < res.length; resIndex++) {
             if(resIndex === 0) {
                 currentTotal = res[resIndex].salary;
@@ -1081,12 +1114,14 @@ function viewTotalBudget() {
             }
         }
 
+        //Output results. 
         console.log(""); 
         console.log("----------------------- TOTAL UTILIZED BUDGET (BY DEPARTMENT) ------------------------");
         console.log(""); 
         console.table(departmentBudgets); 
         console.log("--------------------------------------------------------------------------------------");
 
+        //Track the total expenditures in all and output. 
         let companyTotal = 0; 
 
         departmentBudgets.forEach(department => {
