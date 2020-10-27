@@ -13,7 +13,7 @@ const connection = mysql.createConnection({
 }); 
 
 connection.connect(function(err) {
-    if(err) throw err; 
+    if(err) displayError(); 
 
     displayMenu(); 
 }); 
@@ -35,6 +35,7 @@ function displayMenu() {
                 "Update Employee",
                 "Delete Department",
                 "Delete Role",
+                "Delete Employee",
                 "View Total Utilized Budget",
                 "Quit \n"
             ],
@@ -78,6 +79,9 @@ function displayMenu() {
             case "Delete Role":
                 deleteRole();
                 break; 
+            case "Delete Employee":
+                deleteEmployee(); 
+                break; 
             case "View Total Utilized Budget":
                 viewTotalBudget(); 
                 break; 
@@ -114,7 +118,7 @@ function viewDepartments() {
         }
 
         connection.query(query, function(err, res) {
-            if(err) throw err; 
+            if(err) displayError(); 
     
             res.forEach((department, key, departmentArray) => {
                 departments.push({
@@ -167,7 +171,7 @@ function viewRoles() {
         }
 
         connection.query(query, function(err, res) {
-            if(err) throw err; 
+            if(err) displayError(); 
     
             res.forEach((role, key, roleArray) => {
                 roles.push({
@@ -231,14 +235,14 @@ function viewEmployees() {
         }
 
         connection.query(query, function(err, res) {
-            if(err) throw err; 
+            if(err) displayError(); 
     
             res.forEach((employee,key,employeeArray) => {
     
                 //Get this employee's manager, if any. 
                 const managerQuery = "SELECT employee.first_name, employee.last_name FROM employee WHERE id = ?"; 
                 connection.query(managerQuery, [employee.manager_id],function(err, res) {
-                    if(err) throw err; 
+                    if(err) displayError(); 
     
                     let thisManager; 
     
@@ -310,7 +314,7 @@ function addDepartment() {
                 name: userInput
             },
             function(err) {
-                if(err) throw err; 
+                if(err) displayError(); 
 
                 console.log("---------------------------------------------------------------------");
                 console.log(`DEPARTMENT INSERTED SUCCESSFULLY.`);
@@ -328,7 +332,7 @@ function addRole() {
 
     //Get all departments.
     connection.query("SELECT department.name FROM department", function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         let departmentNames = []; 
 
@@ -353,7 +357,7 @@ function addRole() {
 
             //Get ID for the selected department. 
             connection.query("SELECT department.id FROM department WHERE department.name =?", [userSelection], function(err, res) {
-                if(err) throw err; 
+                if(err) displayError(); 
 
                 let departmentID = Number(res[0].id); 
 
@@ -380,7 +384,7 @@ function addRole() {
                         department_id: departmentID
                     },
                     function(err) {
-                        if(err) throw err; 
+                        if(err) displayError(); 
 
                         console.log("---------------------------------------------------------------------");
                         console.log(`ROLE INSERTED SUCCESSFULLY.`);
@@ -414,7 +418,7 @@ function addEmployee() {
 
         //Get every role title to choose from. 
         connection.query("SELECT role.id, role.title FROM role", function(err, res) {
-            if(err) throw err; 
+            if(err) displayError(); 
 
             let allRoles = []; 
             let allRoleTitles = []; 
@@ -428,7 +432,6 @@ function addEmployee() {
                 allRoleTitles.push(role.title); 
             }); 
 
-            console.log(allRoles); 
             inquirer.prompt([
                 {
                     type: "list",
@@ -446,7 +449,7 @@ function addEmployee() {
 
                 //Get every manager to choose from.
                 connection.query("SELECT * FROM employee", function(err, res) {
-                    if(err) throw err; 
+                    if(err) displayError(); 
 
                     let allEmployees = []; 
                     let allEmployeeNames = []; 
@@ -506,7 +509,12 @@ function addEmployee() {
                             manager_id: employeeManager
                         },
                         function(err) {
-                            if(err) throw err; 
+                            if(err) {
+                                console.log("---------------------------------------------------------------------");
+                                console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                                console.log("---------------------------------------------------------------------");
+                                return displayMenu(); 
+                            }  
 
                             console.log("---------------------------------------------------------------------");
                             console.log(`EMPLOYEE INSERTED SUCCESSFULLY.`);
@@ -530,7 +538,7 @@ function updateEmployee() {
     const query = "SELECT employee.id, employee.first_name, employee.last_name FROM employee ORDER BY employee.id";
 
     connection.query(query, function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         res.forEach(employee => {
             employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
@@ -595,7 +603,7 @@ function updateDepartment() {
     const query = "SELECT department.* FROM department ORDER BY department.id";
 
     connection.query(query, function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         res.forEach(department => {
             departments.push(`${department.id}. ${department.name}`); 
@@ -655,7 +663,7 @@ function updateRole() {
     const query = "SELECT role.*, department.name FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY role.id";
 
     connection.query(query, function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         res.forEach(role => {
             roles.push(`${role.id}. ${role.title} (${role.name} - $${role.salary})`); 
@@ -718,7 +726,7 @@ function updateEmployee() {
     const query = "SELECT employee.id, employee.first_name, employee.last_name FROM employee ORDER BY employee.id";
 
     connection.query(query, function(err, res) {
-        if(err) throw err; 
+        if(err) displayError();
 
         res.forEach(employee => {
             employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
@@ -759,7 +767,7 @@ function updateEmployee() {
                 inquirer.prompt([
                     {
                         type: "input",
-                        message: `Enter the new value for ${fieldToUpdate}. (To go back and view roles, enter R. To go back and view employees, enter E.)`,
+                        message: `Enter the new value for ${fieldToUpdate}. (To go back and view roles, enter R. To go back and view employees, enter E. To remove a manager, enter null.)`,
                         name: "newValue"
                     }
                 ])
@@ -781,7 +789,7 @@ function deleteDepartment() {
     let departmentNames = []; 
 
     connection.query("SELECT * FROM department ORDER BY department.id", function(err, res) {
-        if(err) throw err; 
+        if(err) displayError();
 
         res.forEach(department => departmentNames.push(department.name)); 
 
@@ -817,14 +825,24 @@ function deleteDepartment() {
                 const empQuery = `SELECT employee.id, role.title, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id WHERE department.name = "${departmentChoice}" ORDER BY department.name`; 
 
                 connection.query(empQuery, function(err, res) {
-                    if(err) throw err; 
+                    if(err) {
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                        console.log("---------------------------------------------------------------------");
+                        return displayMenu(); 
+                    }  
 
                     if(res.length > 0) {
                         //Delete every employee in this department. 
                         for(let empIndex = 0; empIndex < res.length; empIndex++) {
                             const query = `DELETE FROM employee WHERE employee.id = ${res[empIndex].id}`; 
                             connection.query(query, function(err) {
-                                if(err) throw err; 
+                                if(err) {
+                                    console.log("---------------------------------------------------------------------");
+                                    console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                                    console.log("---------------------------------------------------------------------");
+                                    return displayMenu(); 
+                                }  
 
                                 console.log(`DELETED EMPLOYEE WITH ID #${res[empIndex].id}`); 
                             }); 
@@ -836,14 +854,24 @@ function deleteDepartment() {
                 const roleQuery = `SELECT role.id, role.title, department.name FROM role LEFT JOIN department ON role.department_id = department.id WHERE department.name = "${departmentChoice}" ORDER BY department.name`; 
 
                 connection.query(roleQuery, function(err, res) {
-                    if(err) throw err; 
+                    if(err) {
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                        console.log("---------------------------------------------------------------------");
+                        return displayMenu(); 
+                    }  
 
                     if(res.length > 0) {
                         //Delete every role in this department. 
                         for(let roleIndex = 0; roleIndex < res.length; roleIndex++) {
                             const query = `DELETE FROM role WHERE role.id = ${res[roleIndex].id}`; 
                             connection.query(query, function(err) {
-                                if(err) throw err; 
+                                if(err) {
+                                    console.log("---------------------------------------------------------------------");
+                                    console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                                    console.log("---------------------------------------------------------------------");
+                                    return displayMenu(); 
+                                } 
 
                                 console.log(`DELETED ROLE WITH ID #${res[roleIndex].id}`); 
                                 
@@ -855,7 +883,12 @@ function deleteDepartment() {
                     const query = `DELETE FROM department WHERE department.name = "${departmentChoice}"`; 
 
                     connection.query(query, function(err) {
-                        if(err) throw err; 
+                        if(err) {
+                            console.log("---------------------------------------------------------------------");
+                            console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                            console.log("---------------------------------------------------------------------");
+                            return displayMenu(); 
+                        }  
                         
                         console.log("---------------------------------------------------------------------");
                         console.log(`DEPARTMENT DELETED SUCCESSFULLY.`);
@@ -876,7 +909,7 @@ function deleteRole() {
     let roleTitles = []; 
 
     connection.query("SELECT * FROM role ORDER BY role.id", function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         res.forEach(role => roleTitles.push(role.title)); 
 
@@ -913,14 +946,24 @@ function deleteRole() {
                 const roleQuery = `SELECT role.title, employee.id FROM role LEFT JOIN employee ON employee.role_id = role.id WHERE role.title = "${roleChoice}" ORDER BY role.title`; 
 
                 connection.query(roleQuery, function(err, res) {
-                    if(err) throw err; 
+                    if(err) {
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                        console.log("---------------------------------------------------------------------");
+                        return displayMenu(); 
+                    }  
 
                     if(res.length > 0) {
                         //Delete every employee with this role.
                         for(let empIndex = 0; empIndex < res.length; empIndex++) {
                             const query = `DELETE FROM employee WHERE employee.id = ${res[empIndex].id}`; 
                             connection.query(query, function(err) {
-                                if(err) throw err; 
+                                if(err) {
+                                    console.log("---------------------------------------------------------------------");
+                                    console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                                    console.log("---------------------------------------------------------------------");
+                                    return displayMenu(); 
+                                }  
 
                                 console.log(`DELETED EMPLOYEE WITH ID #${res[empIndex].id}`); 
                             }); 
@@ -931,7 +974,12 @@ function deleteRole() {
                     const query = `DELETE FROM role WHERE role.title = "${roleChoice}"`; 
 
                     connection.query(query, function(err) {
-                        if(err) throw err; 
+                        if(err) {
+                            console.log("---------------------------------------------------------------------");
+                            console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+                            console.log("---------------------------------------------------------------------");
+                            return displayMenu(); 
+                        }  
                         
                         console.log("---------------------------------------------------------------------");
                         console.log(`ROLE DELETED SUCCESSFULLY.`);
@@ -941,56 +989,68 @@ function deleteRole() {
                         return displayMenu(); 
                     }); 
                 }); 
+                
+            }); 
+        });
+    }); 
+}
 
-                /*
-                connection.query(empQuery, function(err, res) {
-                    if(err) throw err; 
+function deleteEmployee() {
+    let employeeNames = []; 
 
-                    if(res.length > 0) {
-                        //Delete every employee in this department. 
-                        for(let empIndex = 0; empIndex < res.length; empIndex++) {
-                            const query = `DELETE FROM employee WHERE employee.id = ${res[empIndex].id}`; 
-                            connection.query(query, function(err) {
-                                if(err) throw err; 
+    connection.query("SELECT * FROM employee ORDER BY employee.id", function(err, res) {
+        if(err) displayError(); 
 
-                                console.log(`DELETED EMPLOYEE WITH ID #${res[empIndex].id}`); 
-                            }); 
-                        }
+        res.forEach(employee => employeeNames.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`)); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the employee to delete:",
+                choices: [
+                    ...employeeNames
+                ], 
+                name: "employeeName"
+            }
+        ])
+        .then(answer => {
+            const { employeeName } = answer; 
+
+            let employeeChoice = Number(employeeName.slice(0, employeeName.indexOf("."))); 
+
+            inquirer.prompt([
+                {
+                    type:"list",
+                    message: `ARE YOU SURE YOU WANT TO DELETE ${employeeName}?`,
+                    choices: [
+                        "NO",
+                        "YES"
+                    ],
+                    name: "userChoice"
+                }
+            ])
+            .then(answer => {
+                const { userChoice } = answer; 
+
+                if(userChoice === "NO") return displayMenu(); 
+
+                const empQuery = `DELETE FROM employee WHERE employee.id = ${employeeChoice}`; 
+
+                connection.query(empQuery, function(err) {
+                    if(err) {
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`ERROR: CHECK TO SEE IF THIS EMPLOYEE IS A MANAGER OF OTHER EMPLOYEES.`);
+                        console.log(`BEFORE DELETING ${employeeName}, REASSIGN MANAGER OF ALL DIRECT REPORTING EMPLOYEES.`); 
+                        console.log("---------------------------------------------------------------------");
+                    } else {
+                        console.log("---------------------------------------------------------------------");
+                        console.log(`EMPLOYEE DELETED SUCCESSFULLY.`);
+                        console.log(`DELETED EMPLOYEE "${employeeName}" FROM DATABASE.`); 
+                        console.log("---------------------------------------------------------------------"); 
                     }
 
+                    return displayMenu(); 
                 }); 
-
-                const roleQuery = `SELECT role.id, role.title, department.name FROM role LEFT JOIN department ON role.department_id = department.id WHERE department.name = "${departmentChoice}" ORDER BY department.name`; 
-
-                connection.query(empQuery, function(err, res) {
-                    if(err) throw err; 
-
-                    if(res.length > 0) {
-                        //Delete every role in this department. 
-                        for(let roleIndex = 0; roleIndex < res.length; roleIndex++) {
-                            const query = `DELETE FROM role WHERE role.id = ${res[roleIndex].id}`; 
-                            connection.query(query, function(err) {
-                                if(err) throw err; 
-
-                                console.log(`DELETED ROLE WITH ID #${res[roleIndex].id}`); 
-                                
-                            }); 
-                        }
-                        const query = `DELETE FROM department WHERE department.name = "${departmentChoice}"`; 
-
-                        connection.query(query, function(err) {
-                            if(err) throw err; 
-                            
-                            console.log("---------------------------------------------------------------------");
-                            console.log(`DEPARTMENT DELETED SUCCESSFULLY.`);
-                            console.log(`DELETED DEPARTMENT "${departmentChoice}" FROM DATABASE.`); 
-                            console.log("---------------------------------------------------------------------"); 
-
-                            return displayMenu(); 
-                        }); 
-                    }
-                }); 
-               */
                 
             }); 
         });
@@ -998,10 +1058,17 @@ function deleteRole() {
 }
 
 function updateFields(table, field, newValue, id) {
-    const query = `UPDATE ${table} SET ${field}='${newValue}' WHERE id=${id}`; 
+    let query = ""; 
+
+    if(newValue === "null" || newValue === "NULL") {
+        query = `UPDATE ${table} SET ${field}=${newValue} WHERE id=${id}`; 
+    } else {
+        query = `UPDATE ${table} SET ${field}='${newValue}' WHERE id=${id}`; 
+    }
  
     connection.query(query, function(err) {
-        if(err) throw err; 
+        if(err) displayError();
+        
         console.log("---------------------------------------------------------------------");
         console.log(`FIELD UPDATED SUCCESSFULLY.`);
         console.log(`UPDATED ID #${id} IN FIELD ${field} OF TABLE ${table} TO ${newValue}.`); 
@@ -1016,7 +1083,7 @@ function viewTotalBudget() {
     query = "SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, department.id FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY department.id"; 
 
     connection.query(query, function(err, res) {
-        if(err) throw err; 
+        if(err) displayError(); 
 
         let departmentBudgets = [];
         let currentTotal = 0;  
@@ -1085,6 +1152,13 @@ function viewTotalBudget() {
 
         return displayMenu();
     }); 
+}
+
+function displayError() {
+    console.log("---------------------------------------------------------------------");
+    console.log(`ERROR: SOMETHING WENT WRONG. RETURNING TO MAIN MENU.`);
+    console.log("---------------------------------------------------------------------");
+    return displayMenu(); 
 }
 
 
