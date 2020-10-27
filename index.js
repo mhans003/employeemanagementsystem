@@ -33,6 +33,7 @@ function displayMenu() {
                 "Update Department",
                 "Update Role",
                 "Update Employee",
+                "Delete Department",
                 "View Total Utilized Budget",
                 "Quit \n"
             ],
@@ -69,6 +70,9 @@ function displayMenu() {
                 break; 
             case "Update Employee":
                 updateEmployee(); 
+                break; 
+            case "Delete Department":
+                deleteDepartment(); 
                 break; 
             case "View Total Utilized Budget":
                 viewTotalBudget(); 
@@ -767,7 +771,98 @@ function updateEmployee() {
 
         }); 
     }); 
+}
 
+function deleteDepartment() {
+    let departmentNames = []; 
+
+    connection.query("SELECT * FROM department ORDER BY department.id", function(err, res) {
+        res.forEach(department => departmentNames.push(department.name)); 
+
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Select the department to delete:",
+                choices: [
+                    ...departmentNames
+                ], 
+                name: "departmentChoice"
+            }
+        ])
+        .then(answer => {
+            const { departmentChoice } = answer; 
+
+            inquirer.prompt([
+                {
+                    type:"list",
+                    message: `ARE YOU SURE YOU WANT TO DELETE THE ${departmentChoice} DEPARTMENT?`,
+                    choices: [
+                        "NO",
+                        "YES"
+                    ],
+                    name: "userChoice"
+                }
+            ])
+            .then(answer => {
+                const { userChoice } = answer; 
+
+                if(userChoice === "NO") return displayMenu(); 
+
+                const empQuery = `SELECT employee.id, role.title, department.name FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id WHERE department.name = "${departmentChoice}" ORDER BY department.name`; 
+
+                connection.query(empQuery, function(err, res) {
+                    if(err) throw err; 
+
+                    if(res.length > 0) {
+                        //Delete every employee in this department. 
+                        for(let empIndex = 0; empIndex < res.length; empIndex++) {
+                            const query = `DELETE FROM employee WHERE employee.id = ${res[empIndex].id}`; 
+                            connection.query(query, function(err) {
+                                if(err) throw err; 
+
+                                console.log(`DELETED EMPLOYEE WITH ID #${res[empIndex].id}`); 
+                            }); 
+                        }
+                    }
+
+                }); 
+
+                const roleQuery = `SELECT role.id, role.title, department.name FROM role LEFT JOIN department ON role.department_id = department.id WHERE department.name = "${departmentChoice}" ORDER BY department.name`; 
+
+                connection.query(empQuery, function(err, res) {
+                    if(err) throw err; 
+
+                    if(res.length > 0) {
+                        //Delete every role in this department. 
+                        for(let roleIndex = 0; roleIndex < res.length; roleIndex++) {
+                            const query = `DELETE FROM role WHERE role.id = ${res[roleIndex].id}`; 
+                            connection.query(query, function(err) {
+                                if(err) throw err; 
+
+                                console.log(`DELETED ROLE WITH ID #${res[roleIndex].id}`); 
+
+                                
+                            }); 
+                        }
+                        const query = `DELETE FROM department WHERE department.name = "${departmentChoice}"`; 
+
+                        connection.query(query, function(err) {
+                            if(err) throw err; 
+                            
+                            console.log("---------------------------------------------------------------------");
+                            console.log(`DEPARTMENT DELETED SUCCESSFULLY.`);
+                            console.log(`DELETED DEPARTMENT "${departmentChoice}" FROM DATABASE.`); 
+                            console.log("---------------------------------------------------------------------"); 
+
+                            return displayMenu(); 
+                        }); 
+                    }
+                }); 
+               
+                
+            }); 
+        });
+    }); 
 }
 
 function updateFields(table, field, newValue, id) {
@@ -798,7 +893,14 @@ function viewTotalBudget() {
         for(let resIndex = 0; resIndex < res.length; resIndex++) {
             if(resIndex === 0) {
                 currentTotal = res[resIndex].salary;
-                totalEmployees++;  
+                totalEmployees++; 
+                if(res.length === 1) {
+                    departmentBudgets.push({
+                        "Department:": res[resIndex].name,
+                        "Total Employees":totalEmployees,
+                        "Total Utilized Budget":currentTotal
+                    }); 
+                }
             } else if(resIndex === res.length - 1) {
                 if(res[resIndex - 1].id !== res[resIndex].id) {
                     departmentBudgets.push({
@@ -809,7 +911,7 @@ function viewTotalBudget() {
                     departmentBudgets.push({
                         "Department":res[resIndex].name,
                         "Total Employees":1,
-                        "Total Utilized Budget:":res[resIndex].salary
+                        "Total Utilized Budget":res[resIndex].salary
                     }); 
                 } else {
                     currentTotal += res[resIndex].salary;
