@@ -15,8 +15,26 @@ const connection = mysql.createConnection({
 connection.connect(function(err) {
     if(err) displayError(); 
 
+    displayLogo(); 
     displayMenu(); 
 }); 
+
+function displayLogo() {
+
+    let logo = `
+
+        #######                                                    ######                                                  
+        #       #    # #####  #       ####  #   # ###### ######    #     #   ##   #####   ##   #####    ##    ####  ###### 
+        #       ##  ## #    # #      #    #  # #  #      #         #     #  #  #    #    #  #  #    #  #  #  #      #      
+        #####   # ## # #    # #      #    #   #   #####  #####     #     # #    #   #   #    # #####  #    #  ####  #####  
+        #       #    # #####  #      #    #   #   #      #         #     # ######   #   ###### #    # ######      # #      
+        #       #    # #      #      #    #   #   #      #         #     # #    #   #   #    # #    # #    # #    # #      
+        ####### #    # #      ######  ####    #   ###### ######    ######  #    #   #   #    # #####  #    #  ####  ###### 
+    `;
+
+    console.log(logo); 
+
+}
 
 function displayMenu() {
     inquirer.prompt([
@@ -86,7 +104,8 @@ function displayMenu() {
                 viewTotalBudget(); 
                 break; 
             case "Quit \n":
-                console.log(`Goodbye!`); 
+                console.log("------------------------------------ GOODBYE! ------------------------------------"); 
+                console.log("----------------------------------------------------------------------------------");
                 connection.end(); 
         } 
     }); 
@@ -445,8 +464,6 @@ function addEmployee() {
             .then(answer => {
                 const { employeeRoleChoice } = answer; 
 
-                //console.log(employeeRoleChoice); 
-
                 //Get every manager to choose from.
                 connection.query("SELECT * FROM employee", function(err, res) {
                     if(err) displayError(); 
@@ -463,8 +480,6 @@ function addEmployee() {
                         allEmployeeNames.push(`${employee.first_name} ${employee.last_name}`); 
                     }); 
 
-                    console.log(allEmployees); 
-
                     inquirer.prompt([
                         {
                             type: "list",
@@ -479,7 +494,6 @@ function addEmployee() {
                     .then(answer => {
                         const { employeeManagerChoice } = answer; 
 
-                        //console.log(employeeManagerChoice); 
                         let employeeRole; 
                         let employeeManager; 
 
@@ -501,7 +515,6 @@ function addEmployee() {
                             employeeManager = null; 
                         }
 
-                        //console.log(`${employeeRole}; ${employeeManager}`); 
                         connection.query("INSERT INTO employee SET ?", {
                             first_name: firstNameInput,
                             last_name: lastNameInput,
@@ -529,72 +542,6 @@ function addEmployee() {
         }); 
     }); 
 }
-
-/*
-function updateEmployee() {
-    let employees = []; 
-
-    //Get all employees 
-    const query = "SELECT employee.id, employee.first_name, employee.last_name FROM employee ORDER BY employee.id";
-
-    connection.query(query, function(err, res) {
-        if(err) displayError(); 
-
-        res.forEach(employee => {
-            employees.push(`${employee.id}. ${employee.first_name} ${employee.last_name}`); 
-        }); 
-
-        inquirer.prompt([
-            {
-                type: "list",
-                message: "Select the employee you want to modify.",
-                choices: [
-                    ...employees
-                ],
-                name: "employeeChoice"
-            }
-        ])
-        .then(answer => {
-            const { employeeChoice } = answer; 
-
-            const employeeID = Number(employeeChoice.slice(0, employeeChoice.indexOf("."))); 
-
-            //console.log(employeeID); 
-            inquirer.prompt([
-                {
-                    type: "list",
-                    message: "What field do you want to update?",
-                    choices: [
-                        "first_name",
-                        "last_name",
-                        "role_id",
-                        "manager_id"
-                    ],
-                    name: "fieldToUpdate"
-                }
-            ])
-            .then(answer => {
-                const { fieldToUpdate } = answer; 
-        
-                inquirer.prompt([
-                    {
-                        type: "input",
-                        message: `Enter the new value for ${fieldToUpdate}`,
-                        name: "newValue"
-                    }
-                ])
-                .then(answer => {
-                    const { newValue } = answer; 
-        
-                    updateFields("employee", fieldToUpdate, newValue, employeeID); 
-                }); 
-            }); 
-
-        }); 
-    }); 
-
-}
-*/
 
 function updateDepartment() {
     let departments = []; 
@@ -747,7 +694,6 @@ function updateEmployee() {
 
             const employeeID = Number(employeeChoice.slice(0, employeeChoice.indexOf("."))); 
 
-            //console.log(employeeID); 
             inquirer.prompt([
                 {
                     type: "list",

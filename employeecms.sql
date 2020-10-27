@@ -31,52 +31,78 @@ PRIMARY KEY(id)
 );
 
 INSERT INTO department (name) 
-VALUES ("web development");
+VALUES ("Web Development");
 
 INSERT INTO department (name) 
-VALUES ("finance");
+VALUES ("Finance");
 
 INSERT INTO department (name) 
-VALUES ("marketing");
+VALUES ("Marketing");
+
+INSERT INTO department (name) 
+VALUES ("Human Resources");
 
 INSERT INTO role (title, salary, department_id)
-VALUES("web designer",70000,1); 
+VALUES("Junior Developer",90000,1); 
 
 INSERT INTO role (title, salary, department_id)
-VALUES("manager",100000,1); 
+VALUES("Senior Developer",120000,1); 
 
 INSERT INTO role (title, salary, department_id)
-VALUES("junior engineer",110000,1); 
+VALUES("Software Director",140000,1); 
 
 INSERT INTO role (title, salary, department_id)
-VALUES("senior engineer",140000,1); 
+VALUES("Accountant",110000,2); 
 
 INSERT INTO role (title, salary, department_id)
-VALUES("accountant",110000,2); 
+VALUES("Financial Analyst",150000,2); 
 
 INSERT INTO role (title, salary, department_id)
-VALUES("marketing coordinator",70000,3);
+VALUES("Marketing Coordinator",70000,3);
 
 INSERT INTO role (title, salary, department_id)
-VALUES("marketing director",110000,3);
+VALUES("Marketing Director",110000,3);
+
+INSERT INTO role (title, salary, department_id)
+VALUES("HR Director",120000,4);
+
+INSERT INTO role (title, salary, department_id)
+VALUES("HR Specialist",90000,4);
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES("Jane","Doe",2);
+VALUES("Max","Frank",3);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES("Jim","Smith",1,1); 
-
-INSERT INTO employee (first_name, last_name, role_id)
-VALUES("Max","F",4);
+VALUES("Jane","Doe",2,1);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES("Jason","A",3,3); 
+VALUES("Jim","Smith",1,2); 
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES("Sam","F",5);
+VALUES("Jason","Akins",4); 
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES("Jane","E",6);
+VALUES("Sarah","French",5);
 
+INSERT INTO employee (first_name, last_name, role_id)
+VALUES("Rebecca","Jamison",6);
+
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES("Jessica","Elliot",7,6);
+
+INSERT INTO employee (first_name, last_name, role_id)
+VALUES("Rachel","Johnson",8);
+
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES("Michael","Jared",9,8);
+
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES("Tom","Savage",1,2);
+
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES("Jill","Robinson",1,2);
+
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES("Sammy","Ricks",9,8);
 
 

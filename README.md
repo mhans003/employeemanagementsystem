@@ -1,7 +1,11 @@
 # Employee Management System
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![Screenshot of Employee Management System]()
+![Screenshot of Employee Management System](./assets/images/empdb1.jpg)
+![Screenshot of Employee Management System](./assets/images/empdb2.jpg)
+![Screenshot of Employee Management System](./assets/images/empdb3.jpg)
+![Screenshot of Employee Management System](./assets/images/empdb4.jpg)
+![Screenshot of Employee Management System](./assets/images/empdb5.jpg)
 
 ## Description 
 
