@@ -56,7 +56,8 @@ function displayMenu() {
                 "View Total Utilized Budget",
                 "Quit \n"
             ],
-            name: "choice"
+            name: "choice",
+            pageSize: 14
         }
     ])
     .then(answer => {
