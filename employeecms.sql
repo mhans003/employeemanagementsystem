@@ -85,10 +85,10 @@ INSERT INTO employee (first_name, last_name, role_id)
 VALUES("Sarah","French",5);
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES("Rebecca","Jamison",6);
+VALUES("Rebecca","Jamison",7);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES("Jessica","Elliot",7,6);
+VALUES("Jessica","Elliot",6,6);
 
 INSERT INTO employee (first_name, last_name, role_id)
 VALUES("Rachel","Johnson",8);
