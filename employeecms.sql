@@ -1,4 +1,4 @@
-DROP DATABASE employee_CMS; 
+-- DROP DATABASE employee_CMS; --
 
 CREATE DATABASE employee_CMS; 
 
