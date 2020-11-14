@@ -24,8 +24,8 @@ Throughout this program, there are error handlers to capture when a database err
 ## Features
 
 * Runs in the command line using Node.js.
-* Written in Javascript. 
-* Requires mysql to connect to database. 
+* Written in JavaScript. 
+* Uses 'mysql' package to connect to MySQL database. 
 * Includes Inquirer to receive and validate user input via command line. 
 * Uses console.table to output data to the user.  
 
